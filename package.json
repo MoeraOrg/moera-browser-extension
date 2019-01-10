@@ -1,0 +1,15 @@
+{
+  "name": "moera-browser-extension",
+  "version": "0.1.0",
+  "description": "Moera Decentralized Social Network browser extension.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "webpack": "^2.3.2"
+  },
+  "dependencies": {
+  }
+}
