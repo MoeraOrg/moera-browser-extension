@@ -7,8 +7,11 @@
     "icons": {
         "32": "icons/moera-32.png"
     },
-    "content_scripts": [{
-        "matches": ["*://*/*"],
-        "js": ["content.js"]
-    }]
+    "permissions": [
+        "webRequest",
+        "<all_urls>"
+    ],
+    "background": {
+        "scripts": ["background.js"]
+    }
 }
