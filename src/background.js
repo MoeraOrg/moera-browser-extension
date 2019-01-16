@@ -8,10 +8,6 @@ function probe(requestDetails) {
                 break;
             }
         }
-    } else {
-        browser.tabs.executeScript({
-            code: "alert(\"Error!\")"
-        });
     }
 }
 
