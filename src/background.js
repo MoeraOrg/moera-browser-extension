@@ -1,3 +1,5 @@
+import browser from "webextension-polyfill";
+
 function probe(requestDetails) {
     if (requestDetails.responseHeaders) {
         for (let header of requestDetails.responseHeaders) {
