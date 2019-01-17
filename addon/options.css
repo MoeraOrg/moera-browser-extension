@@ -1,0 +1,12 @@
+LABEL {
+    font-weight: bold;
+}
+
+#bundle {
+    width: 100%;
+}
+
+#save {
+    display: block;
+    margin-top: 2ex;
+}

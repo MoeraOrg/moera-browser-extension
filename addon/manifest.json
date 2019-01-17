@@ -8,10 +8,15 @@
         "32": "icons/moera-32.png"
     },
     "permissions": [
+        "storage",
         "webRequest",
         "<all_urls>"
     ],
     "background": {
         "scripts": ["background.js"]
+    },
+    "options_ui": {
+        "page": "options.html",
+        "browser_style": true
     }
 }
