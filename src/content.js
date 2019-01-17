@@ -1,13 +1,22 @@
 var actualCode = '(' + function() {
-    console.log("Rewriting...");
-    document.open("text/html", "replace");
-    document.write("<html>");
-    document.write("<head><title>Moera</title></head>");
-    document.write("<body><h1>Hello, Moera!</h1></body>");
-    document.write("</html>");
-    document.close();
+    fetch("%URL%")
+        .then(response => response.text())
+        .then(text => {
+            var content = text.replace(
+                /<head>/i,
+                "<head><base href='%URL%'>");
+            document.open("text/html", "replace");
+            document.write(content);
+            document.close();
+        });
 } + ')();';
-var script = document.createElement('script');
-script.textContent = actualCode;
-(document.head||document.documentElement).appendChild(script);
-script.remove();
+browser.storage.local.get()
+    .then(settings => {
+        if (settings.clientUrl) {
+            actualCode = actualCode.replace(/%URL%/g, settings.clientUrl);
+            console.log(actualCode);
+            var script = document.createElement('script');
+            script.textContent = actualCode;
+            (document.head||document.documentElement).appendChild(script);
+        }
+    });
