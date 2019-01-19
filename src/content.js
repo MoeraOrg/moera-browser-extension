@@ -1,6 +1,11 @@
 var actualCode = '(' + function() {
     fetch("%URL%")
-        .then(response => response.text())
+        .then(response => {
+            if (response.ok) {
+                return response.text();
+            }
+            throw new Error("Client download failed.");
+        })
         .then(text => {
             var content = text.replace(
                 /<head>/i,
@@ -8,13 +13,16 @@ var actualCode = '(' + function() {
             document.open("text/html", "replace");
             document.write(content);
             document.close();
+        })
+        .catch(function(error) {
+            alert("Cannot open Moera client page: " + error.message);
         });
 } + ')();';
 browser.storage.local.get()
     .then(settings => {
         if (settings.clientUrl) {
             actualCode = actualCode.replace(/%URL%/g, settings.clientUrl);
-            var script = document.createElement('script');
+            var script = document.createElement("script");
             script.textContent = actualCode;
             (document.head||document.documentElement).appendChild(script);
         } else {
