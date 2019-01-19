@@ -18,3 +18,11 @@ browser.webRequest.onCompleted.addListener(
     {urls: ["<all_urls>"], types: ["main_frame"]},
     ["responseHeaders"]
 );
+
+browser.runtime.onMessage.addListener(
+    function (message, sender, sendResponse) {
+        if (message == "openOptions") {
+            browser.runtime.openOptionsPage();
+        }
+    }
+);
