@@ -1,11 +1,13 @@
 {
     "manifest_version": 2,
-    "name": "Moera Browser Extension",
+    "name": "Moera",
     "version": "0.1.0",
-    "description": "Moera Decentralized Social Network browser extension.",
+    "description": "Moera Decentralized Social Network.",
 
     "icons": {
-        "32": "icons/moera-32.png"
+        "32": "icons/moera-32.png",
+        "64": "icons/moera-64.png",
+        "128": "icons/moera-128.png"
     },
     "permissions": [
         "storage",
