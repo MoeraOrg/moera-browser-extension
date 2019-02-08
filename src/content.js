@@ -18,7 +18,8 @@ var actualCode = '(' + function() {
             alert("Cannot open Moera client page: " + error.message);
         });
 } + ')();';
-browser.storage.local.get()
+
+(browser||chrome).storage.local.get()
     .then(settings => {
         if (settings.clientUrl) {
             actualCode = actualCode.replace(/%URL%/g, settings.clientUrl);
@@ -30,7 +31,7 @@ browser.storage.local.get()
                 "Moera client URL is not set in the add-on settings. "
                 + "Open the settings page?");
             if (ok) {
-                browser.runtime.sendMessage("openOptions");
+                (browser||chrome).runtime.sendMessage("openOptions");
             }
         }
     });
