@@ -1,5 +1,6 @@
 import browser from "webextension-polyfill";
 
+const MAX_MATCHING_URLS_SIZE = 100;
 let matchingUrls = new Map();
 
 function sendHeaders({requestHeaders}) {
@@ -19,7 +20,8 @@ function scanHeaders({responseHeaders, url}) {
     if (responseHeaders) {
         const header = responseHeaders.find(({name}) => name === "X-Moera");
         if (header) {
-            matchingUrls.set(url, true);
+            matchingUrls.set(url, Date.now());
+            cleanupMatchingUrls();
         }
     }
 }
@@ -29,6 +31,18 @@ function modifyPage({url}) {
         browser.tabs.executeScript({
             file: "/content.js"
         });
+    }
+}
+
+function cleanupMatchingUrls() {
+    if (matchingUrls.size <= MAX_MATCHING_URLS_SIZE) {
+        return;
+    }
+    let elements = [];
+    matchingUrls.forEach((value, key) => elements.push({key, value}));
+    elements.sort((e1, e2) => e1.value - e2.value);
+    for (let i = 0; i < elements.length - MAX_MATCHING_URLS_SIZE; i++) {
+        matchingUrls.delete(elements[i].key);
     }
 }
 
