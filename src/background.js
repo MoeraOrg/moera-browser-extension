@@ -17,11 +17,9 @@ function sendHeaders({requestHeaders}) {
 
 function scanHeaders({responseHeaders, url}) {
     if (responseHeaders) {
-        for (let header of responseHeaders) {
-            if (header.name === "X-Moera") {
-                matchingUrls.set(url, true);
-                break;
-            }
+        const header = responseHeaders.find(({name}) => name === "X-Moera");
+        if (header) {
+            matchingUrls.set(url, true);
         }
     }
 }
