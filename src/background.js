@@ -2,9 +2,9 @@ import browser from "webextension-polyfill";
 
 let matchingUrls = new Map();
 
-function sendHeaders(requestDetails) {
+function sendHeaders({requestHeaders}) {
     return new Promise((resolve, reject) => {
-        let headers = requestDetails.requestHeaders.filter(header => header.name !== "X-Accept-Moera");
+        let headers = requestHeaders.filter(header => header.name !== "X-Accept-Moera");
         headers.push({
             name: "X-Accept-Moera",
             value: "1.0"
@@ -15,19 +15,19 @@ function sendHeaders(requestDetails) {
     });
 }
 
-function probe(requestDetails) {
-    if (requestDetails.responseHeaders) {
-        for (let header of requestDetails.responseHeaders) {
+function scanHeaders({responseHeaders, url}) {
+    if (responseHeaders) {
+        for (let header of responseHeaders) {
             if (header.name === "X-Moera") {
-                matchingUrls.set(requestDetails.url, true);
+                matchingUrls.set(url, true);
                 break;
             }
         }
     }
 }
 
-function modifyPage(transitionDetails) {
-    if (matchingUrls.has(transitionDetails.url)) {
+function modifyPage({url}) {
+    if (matchingUrls.has(url)) {
         browser.tabs.executeScript({
             file: "/content.js"
         });
@@ -41,7 +41,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(
 );
 
 browser.webRequest.onCompleted.addListener(
-    probe,
+    scanHeaders,
     {urls: ["<all_urls>"], types: ["main_frame", "speculative"]},
     ["responseHeaders"]
 );
@@ -51,7 +51,7 @@ browser.webNavigation.onCommitted.addListener(
 );
 
 browser.runtime.onMessage.addListener(
-    function (message, sender, sendResponse) {
+    (message, sender, sendResponse) => {
         if (message === "openOptions") {
             browser.runtime.openOptionsPage();
         }
