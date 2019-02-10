@@ -52,10 +52,10 @@ browser.webRequest.onBeforeSendHeaders.addListener(
     ["blocking", "requestHeaders"]
 );
 
-browser.webRequest.onCompleted.addListener(
+browser.webRequest.onHeadersReceived.addListener(
     scanHeaders,
     {urls: ["<all_urls>"], types: ["main_frame", "speculative"]},
-    ["responseHeaders"]
+    ["blocking", "responseHeaders"] // "blocking" seems to be important to prevent race with onCommitted
 );
 
 browser.webNavigation.onCommitted.addListener(
