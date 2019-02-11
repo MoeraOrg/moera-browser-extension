@@ -19,8 +19,8 @@ let actualCode = '(' + function() {
         });
 } + ')();';
 
-(browser||chrome).storage.local.get()
-    .then(settings => {
+(browser||chrome).storage.local.get("settings")
+    .then(({settings}) => {
         if (settings.clientUrl) {
             actualCode = actualCode.replace(/%URL%/g, settings.clientUrl);
             let script = document.createElement("script");
@@ -31,7 +31,7 @@ let actualCode = '(' + function() {
                 "Moera client URL is not set in the add-on settings. "
                 + "Open the settings page?");
             if (ok) {
-                (browser||chrome).runtime.sendMessage("openOptions");
+                (browser||chrome).runtime.sendMessage({action: "openOptions"});
             }
         }
     });

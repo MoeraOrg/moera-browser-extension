@@ -64,8 +64,17 @@ browser.webNavigation.onCommitted.addListener(
 
 browser.runtime.onMessage.addListener(
     (message, sender, sendResponse) => {
-        if (message === "openOptions") {
+        if (!message || typeof message !== "object" || !message.action) {
+            return;
+        }
+        if (message.action === "openOptions") {
             browser.runtime.openOptionsPage();
+        }
+        if (message.action === "storeData") {
+            browser.storage.local.set({clientData: message.payload});
+        }
+        if (message.action === "loadData") {
+            sendResponse(browser.storage.local.get("clientData"));
         }
     }
 );
