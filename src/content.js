@@ -26,6 +26,29 @@ let actualCode = '(' + function() {
             let script = document.createElement("script");
             script.textContent = actualCode;
             (document.head||document.documentElement).appendChild(script);
+
+            window.addEventListener("message", (event) => {
+                // Only accept messages from the same frame
+                if (event.source !== window) {
+                    return;
+                }
+
+                const message = event.data;
+
+                // Only accept messages that we know are ours
+                if (message === null
+                    || typeof message !== "object"
+                    || !!message.source && message.source !== "dataaccessgateway-agent") {
+                    return;
+                }
+
+                chrome.runtime.sendMessage(message)
+                    .then(response => {
+                        if (response !== null && typeof response === "object") {
+                            window.postMessage(response, "*");
+                        }
+                    });
+            });
         } else {
             const ok = window.confirm(
                 "Moera client URL is not set in the add-on settings. "

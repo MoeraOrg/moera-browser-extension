@@ -46,6 +46,14 @@ function cleanupMatchingUrls() {
     }
 }
 
+async function loadData() {
+    const {clientData} = await browser.storage.local.get("clientData");
+    return {
+        action: "loadedData",
+        payload: clientData
+    }
+}
+
 browser.webRequest.onBeforeSendHeaders.addListener(
     sendHeaders,
     {urls: ["<all_urls>"], types: ["main_frame", "speculative"]},
@@ -74,7 +82,7 @@ browser.runtime.onMessage.addListener(
             browser.storage.local.set({clientData: message.payload});
         }
         if (message.action === "loadData") {
-            sendResponse(browser.storage.local.get("clientData"));
+            sendResponse(loadData());
         }
     }
 );
