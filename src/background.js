@@ -34,6 +34,15 @@ function modifyPage({url}) {
     }
 }
 
+function startCommunication() {
+    browser.tabs.executeScript({
+        file: "/communication.js"
+    });
+    return {
+        cancel: true
+    };
+}
+
 function cleanupMatchingUrls() {
     if (matchingUrls.size <= MAX_MATCHING_URLS_SIZE) {
         return;
@@ -70,11 +79,18 @@ browser.webNavigation.onCommitted.addListener(
     modifyPage
 );
 
+browser.webRequest.onBeforeSendHeaders.addListener(
+    startCommunication,
+    {urls: ["*://moera.please.start.com/*"], types: ["xmlhttprequest"]},
+    ["blocking"]
+);
+
 browser.runtime.onMessage.addListener(
     (message, sender, sendResponse) => {
         if (!message || typeof message !== "object" || !message.action) {
             return;
         }
+        console.log("Message received by background: " + JSON.stringify(message));
         if (message.action === "openOptions") {
             browser.runtime.openOptionsPage();
         }

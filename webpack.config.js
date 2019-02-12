@@ -4,6 +4,7 @@ module.exports = {
     entry: {
         background: "./src/background.js",
         content: "./src/content.js",
+        communication: "./src/communication.js",
         options: "./src/options.js"
     },
     output: {
