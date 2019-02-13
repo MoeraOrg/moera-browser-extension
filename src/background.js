@@ -103,7 +103,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(
 );
 
 browser.runtime.onMessage.addListener(
-    (message, sender, sendResponse) => {
+    (message, sender) => {
         if (!message || typeof message !== "object" || !message.action) {
             return;
         }
@@ -115,13 +115,13 @@ browser.runtime.onMessage.addListener(
             browser.storage.local.set({clientData: message.payload});
         }
         if (message.action === "loadData") {
-            sendResponse(loadData());
+            return loadData();
         }
         if (message.action === "registerComPassword") {
             registerComPassword(message.payload);
         }
         if (message.action === "validateComPassword") {
-            sendResponse(validateComPassword(message.payload));
+            return Promise.resolve(validateComPassword(message.payload));
         }
     }
 );
