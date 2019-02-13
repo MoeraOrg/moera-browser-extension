@@ -11,7 +11,7 @@ let actualCode = '(' + function() {
         .then(text => {
             const content = text
                 .replace(/<head>/i, "<head><base href='%URL%'>")
-                .replace(/<body>/i, "<body data-com-passwd='%PASSWD%'>");
+                .replace(/<body>/i, "<body data-com-password='%PASSWD%'>");
             document.open("text/html", "replace");
             document.write(content);
             document.close();
@@ -30,9 +30,12 @@ function randomPassword() {
 (browser||chrome).storage.local.get("settings")
     .then(data => {
         if (data.settings && data.settings.clientUrl) {
+            const comPassword = randomPassword();
+            (browser||chrome).runtime.sendMessage({action: "registerComPassword", payload: comPassword});
+
             actualCode = actualCode
                 .replace(/%URL%/g, data.settings.clientUrl)
-                .replace(/%PASSWD%/g, randomPassword());
+                .replace(/%PASSWD%/g, comPassword);
             let script = document.createElement("script");
             script.textContent = actualCode;
             (document.head||document.documentElement).appendChild(script);

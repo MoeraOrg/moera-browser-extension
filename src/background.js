@@ -3,6 +3,21 @@ import browser from "webextension-polyfill";
 const MAX_MATCHING_URLS_SIZE = 100;
 let matchingUrls = new Map();
 
+const MAX_COM_PASSWORDS_SIZE = 100;
+let comPasswords = new Map();
+
+function cleanupFlash(flash, maxSize) {
+    if (flash.size <= maxSize) {
+        return;
+    }
+    let elements = [];
+    flash.forEach((value, key) => elements.push({key, value}));
+    elements.sort((e1, e2) => e1.value - e2.value);
+    for (let i = 0; i < elements.length - maxSize; i++) {
+        flash.delete(elements[i].key);
+    }
+}
+
 function sendHeaders({requestHeaders}) {
     return new Promise((resolve, reject) => {
         let headers = requestHeaders.filter(header => header.name !== "X-Accept-Moera");
@@ -21,20 +36,8 @@ function scanHeaders({responseHeaders, url}) {
         const header = responseHeaders.find(({name}) => name === "X-Moera");
         if (header) {
             matchingUrls.set(url, Date.now());
-            cleanupMatchingUrls();
+            cleanupFlash(matchingUrls, MAX_MATCHING_URLS_SIZE);
         }
-    }
-}
-
-function cleanupMatchingUrls() {
-    if (matchingUrls.size <= MAX_MATCHING_URLS_SIZE) {
-        return;
-    }
-    let elements = [];
-    matchingUrls.forEach((value, key) => elements.push({key, value}));
-    elements.sort((e1, e2) => e1.value - e2.value);
-    for (let i = 0; i < elements.length - MAX_MATCHING_URLS_SIZE; i++) {
-        matchingUrls.delete(elements[i].key);
     }
 }
 
@@ -62,6 +65,19 @@ async function loadData() {
         action: "loadedData",
         payload: clientData
     }
+}
+
+function registerComPassword(password) {
+    comPasswords.set(password, Date.now());
+    cleanupFlash(comPasswords, MAX_COM_PASSWORDS_SIZE);
+}
+
+function validateComPassword(password) {
+    if (comPasswords.has(password)) {
+        comPasswords.delete(password);
+        return true;
+    }
+    return false;
 }
 
 browser.webRequest.onBeforeSendHeaders.addListener(
@@ -100,6 +116,12 @@ browser.runtime.onMessage.addListener(
         }
         if (message.action === "loadData") {
             sendResponse(loadData());
+        }
+        if (message.action === "registerComPassword") {
+            registerComPassword(message.payload);
+        }
+        if (message.action === "validateComPassword") {
+            sendResponse(validateComPassword(message.payload));
         }
     }
 );

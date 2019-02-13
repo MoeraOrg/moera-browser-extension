@@ -1,26 +1,57 @@
-window.addEventListener("message", (event) => {
-    // Only accept messages from the same frame
-    if (event.source !== window) {
-        return;
+function initializeCommunication() {
+    window.addEventListener("message", (event) => {
+        // Only accept messages from the same frame
+        if (event.source !== window) {
+            return;
+        }
+
+        const message = event.data;
+        console.log("Message received by communication: " + JSON.stringify(message));
+
+        // Only accept messages that we know are ours
+        if (message === null || typeof message !== "object" || !message.source || message.source !== "moera") {
+            return;
+        }
+
+        chrome.runtime.sendMessage(message)
+            .then(response => {
+                if (response !== null && typeof response === "object") {
+                    window.postMessage(response, "*");
+                }
+            });
+    });
+
+    window.postMessage({
+        source: "moera",
+        action: "loadData"
+    }, "*");
+}
+
+async function isInitializationEnabled() {
+    let body = document.getElementsByTagName("body")[0];
+    if (body.getAttribute("data-com-initialized") != null) {
+        console.log("Already initialized");
+        return false;
     }
-
-    const message = event.data;
-    console.log("Message received by communication: " + JSON.stringify(message));
-
-    // Only accept messages that we know are ours
-    if (message === null || typeof message !== "object" || !message.source || message.source !== "moera") {
-        return;
+    const comPassword = body.getAttribute("data-com-password");
+    if (comPassword == null) {
+        console.log("Password absent");
+        return false;
     }
+    const response = await chrome.runtime.sendMessage({
+        action: "validateComPassword",
+        payload: comPassword
+    });
+    console.log("Password valid: " + response);
+    if (response) {
+        body.setAttribute("data-com-initialized", "yes");
+        body.removeAttribute("data-com-password");
+    }
+    return response;
+}
 
-    chrome.runtime.sendMessage(message)
-        .then(response => {
-            if (response !== null && typeof response === "object") {
-                window.postMessage(response, "*");
-            }
-        });
+isInitializationEnabled().then(enabled => {
+    if (enabled) {
+        initializeCommunication();
+    }
 });
-
-window.postMessage({
-    source: "moera",
-    action: "loadData"
-}, "*");
