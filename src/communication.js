@@ -6,7 +6,6 @@ function initializeCommunication() {
         }
 
         const message = event.data;
-        console.log("Message received by communication: " + JSON.stringify(message));
 
         // Only accept messages that we know are ours
         if (message === null || typeof message !== "object" || !message.source || message.source !== "moera") {
@@ -30,19 +29,16 @@ function initializeCommunication() {
 async function isInitializationEnabled() {
     let body = document.getElementsByTagName("body")[0];
     if (body.getAttribute("data-com-initialized") != null) {
-        console.log("Already initialized");
         return false;
     }
     const comPassword = body.getAttribute("data-com-password");
     if (comPassword == null) {
-        console.log("Password absent");
         return false;
     }
     const response = await chrome.runtime.sendMessage({
         action: "validateComPassword",
         payload: comPassword
     });
-    console.log("Password valid: " + response);
     if (response) {
         body.setAttribute("data-com-initialized", "yes");
         body.removeAttribute("data-com-password");

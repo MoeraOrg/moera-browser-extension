@@ -107,7 +107,6 @@ browser.runtime.onMessage.addListener(
         if (!message || typeof message !== "object" || !message.action) {
             return;
         }
-        console.log("Message received by background: " + JSON.stringify(message));
         if (message.action === "openOptions") {
             browser.runtime.openOptionsPage();
         }
