@@ -5,10 +5,10 @@ window.addEventListener("message", (event) => {
     }
 
     const message = event.data;
-    console.log("Message received: " + JSON.stringify(message));
+    console.log("Message received by communication: " + JSON.stringify(message));
 
     // Only accept messages that we know are ours
-    if (message === null || typeof message !== "object") {
+    if (message === null || typeof message !== "object" || !message.source || message.source !== "moera") {
         return;
     }
 
@@ -21,5 +21,6 @@ window.addEventListener("message", (event) => {
 });
 
 window.postMessage({
+    source: "moera",
     action: "loadData"
 }, "*");

@@ -26,6 +26,18 @@ function scanHeaders({responseHeaders, url}) {
     }
 }
 
+function cleanupMatchingUrls() {
+    if (matchingUrls.size <= MAX_MATCHING_URLS_SIZE) {
+        return;
+    }
+    let elements = [];
+    matchingUrls.forEach((value, key) => elements.push({key, value}));
+    elements.sort((e1, e2) => e1.value - e2.value);
+    for (let i = 0; i < elements.length - MAX_MATCHING_URLS_SIZE; i++) {
+        matchingUrls.delete(elements[i].key);
+    }
+}
+
 function modifyPage({url}) {
     if (matchingUrls.has(url)) {
         browser.tabs.executeScript({
@@ -43,21 +55,10 @@ function startCommunication() {
     };
 }
 
-function cleanupMatchingUrls() {
-    if (matchingUrls.size <= MAX_MATCHING_URLS_SIZE) {
-        return;
-    }
-    let elements = [];
-    matchingUrls.forEach((value, key) => elements.push({key, value}));
-    elements.sort((e1, e2) => e1.value - e2.value);
-    for (let i = 0; i < elements.length - MAX_MATCHING_URLS_SIZE; i++) {
-        matchingUrls.delete(elements[i].key);
-    }
-}
-
 async function loadData() {
     const {clientData} = await browser.storage.local.get("clientData");
     return {
+        source: "moera",
         action: "loadedData",
         payload: clientData
     }
@@ -81,7 +82,7 @@ browser.webNavigation.onCommitted.addListener(
 
 browser.webRequest.onBeforeSendHeaders.addListener(
     startCommunication,
-    {urls: ["*://moera.please.start.com/*"], types: ["xmlhttprequest"]},
+    {urls: ["*://moera.please.start.communication/*"], types: ["xmlhttprequest"]},
     ["blocking"]
 );
 
