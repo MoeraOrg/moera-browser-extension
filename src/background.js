@@ -74,7 +74,7 @@ function registerComPassword(password) {
 
 function validateComPassword(password) {
     if (comPasswords.has(password)) {
-        comPasswords.delete(password);
+        comPasswords.set(password, Date.now());
         return true;
     }
     return false;
