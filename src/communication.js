@@ -1,3 +1,5 @@
+import browser from 'webextension-polyfill';
+
 function initializeCommunication() {
     window.addEventListener("message", (event) => {
         // Only accept messages from the same frame
@@ -12,7 +14,7 @@ function initializeCommunication() {
             return;
         }
 
-        chrome.runtime.sendMessage(message)
+        browser.runtime.sendMessage(message)
             .then(response => {
                 if (response !== null && typeof response === "object") {
                     window.postMessage(response, "*");
@@ -35,7 +37,7 @@ async function isInitializationEnabled() {
     if (comPassword == null) {
         return false;
     }
-    const response = await chrome.runtime.sendMessage({
+    const response = await browser.runtime.sendMessage({
         action: "validateComPassword",
         payload: comPassword
     });

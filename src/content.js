@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import * as Base64js from 'base64-js';
 
 let actualCode = '(' + function() {
@@ -11,7 +12,7 @@ let actualCode = '(' + function() {
         .then(text => {
             const content = text
                 .replace(/<head>/i, "<head><base href='%URL%'>")
-                .replace(/<body>/i, "<body data-com-password='%PASSWD%'>");
+                .replace(/<body>/i, "<body data-com-password='%PASSWD%' data-x-moera='%HEADER%'>");
             document.open("text/html", "replace");
             document.write(content);
             document.close();
@@ -27,24 +28,27 @@ function randomPassword() {
     return Base64js.fromByteArray(buf);
 }
 
-(browser||chrome).storage.local.get("settings")
+browser.storage.local.get("settings")
     .then(data => {
         if (data.settings && data.settings.clientUrl) {
             const comPassword = randomPassword();
-            (browser||chrome).runtime.sendMessage({action: "registerComPassword", payload: comPassword});
-
-            actualCode = actualCode
-                .replace(/%URL%/g, data.settings.clientUrl)
-                .replace(/%PASSWD%/g, comPassword);
-            let script = document.createElement("script");
-            script.textContent = actualCode;
-            (document.head||document.documentElement).appendChild(script);
+            browser.runtime.sendMessage({action: "registerComPassword", payload: comPassword});
+            browser.runtime.sendMessage({action: "getHeader", payload: window.location.href})
+                .then(header => {
+                    actualCode = actualCode
+                        .replace(/%URL%/g, data.settings.clientUrl)
+                        .replace(/%PASSWD%/g, comPassword)
+                        .replace(/%HEADER%/g, header);
+                    let script = document.createElement("script");
+                    script.textContent = actualCode;
+                    (document.head||document.documentElement).appendChild(script);
+                });
         } else {
             const ok = window.confirm(
                 "Moera client URL is not set in the add-on settings. "
                 + "Open the settings page?");
             if (ok) {
-                (browser||chrome).runtime.sendMessage({action: "openOptions"});
+                browser.runtime.sendMessage({action: "openOptions"});
             }
         }
     });
