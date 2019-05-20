@@ -35,8 +35,8 @@ Installation instructions:
 6. In the browser, open the extension settings and set the URL of the [server
    that serves the web client][1]. Save the settings.
 7. Make sure that the [node][2] and the server that serves the web client are
-   up and running. The [naming server][3] is also needed for the node and
-   client to work properly. 
+   up and running. The [naming server][3] is also needed for node and client
+    to work properly.
 8. In the browser, open the main page of the node. The browser extension should
    replace it automatically with the web client interface.
 
