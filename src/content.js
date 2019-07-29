@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import * as Base64js from 'base64-js';
 
-let actualCode = '(' + function() {
+let scriptCode = '(' + function() {
     fetch("%URL%")
         .then(response => {
             if (response.ok) {
@@ -35,13 +35,13 @@ browser.storage.local.get("settings")
             browser.runtime.sendMessage({action: "registerComPassword", payload: comPassword});
             browser.runtime.sendMessage({action: "getHeader", payload: window.location.href})
                 .then(header => {
-                    actualCode = actualCode
+                    scriptCode = scriptCode
                         .replace(/%URL%/g, data.settings.clientUrl)
                         .replace(/%PASSWD%/g, comPassword)
                         .replace(/%HEADER%/g, header);
                     let script = document.createElement("script");
-                    script.textContent = actualCode;
-                    (document.head||document.documentElement).appendChild(script);
+                    script.textContent = scriptCode;
+                    (document.head || document.documentElement).appendChild(script);
                 });
         } else {
             const ok = window.confirm(

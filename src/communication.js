@@ -46,7 +46,7 @@ async function isInitializationEnabled() {
         body.removeAttribute("data-com-password");
     } else {
         // Forced reload will cause fetching of the page again from the server
-        // and activation of the extension that will generate new password
+        // and activation of the extension that will generate a new password
         window.location.assign(window.location);
     }
     return response;
