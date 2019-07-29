@@ -86,13 +86,13 @@ function getHeader(url) {
 
 browser.webRequest.onBeforeSendHeaders.addListener(
     sendHeaders,
-    {urls: ["<all_urls>"], types: ["main_frame", "speculative"]},
+    {urls: ["<all_urls>"], types: ["main_frame"]},
     ["blocking", "requestHeaders"]
 );
 
 browser.webRequest.onHeadersReceived.addListener(
     scanHeaders,
-    {urls: ["<all_urls>"], types: ["main_frame", "speculative"]},
+    {urls: ["<all_urls>"], types: ["main_frame"]},
     ["blocking", "responseHeaders"] // "blocking" seems to be important to prevent race with onCommitted
 );
 
