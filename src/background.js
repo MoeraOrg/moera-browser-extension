@@ -6,6 +6,8 @@ let matchingUrls = new Map();
 const MAX_COM_PASSWORDS_SIZE = 100;
 let comPasswords = new Map();
 
+let activeTabs = [];
+
 function cleanupFlash(flash, maxSize) {
     if (flash.size <= maxSize) {
         return;
@@ -16,6 +18,18 @@ function cleanupFlash(flash, maxSize) {
     for (let i = 0; i < elements.length - maxSize; i++) {
         flash.delete(elements[i].key);
     }
+}
+
+function broadcastMessage(message) {
+    let closedTabs = [];
+    activeTabs.forEach(tabId => browser.tabs.sendMessage(tabId, message)
+                                            .catch(() => closedTabs.push(tabId)));
+    closedTabs.forEach(tabId => {
+        const i = activeTabs.indexOf(tabId);
+        if (i > 0) {
+            activeTabs.splice(i, 1);
+        }
+    })
 }
 
 function sendHeaders({requestHeaders}) {
@@ -65,6 +79,11 @@ async function loadData() {
 
 function storeData(clientData) {
     browser.storage.local.set({clientData});
+    broadcastMessage({
+        source: "moera",
+        action: "loadedData",
+        payload: clientData
+    });
 }
 
 function registerComPassword(password) {
@@ -72,9 +91,12 @@ function registerComPassword(password) {
     cleanupFlash(comPasswords, MAX_COM_PASSWORDS_SIZE);
 }
 
-function validateComPassword(password) {
+function validateComPassword(tabId, password) {
     if (comPasswords.has(password)) {
         comPasswords.set(password, {accessed: Date.now()});
+        if (!activeTabs.includes(tabId)) {
+            activeTabs.push(tabId);
+        }
         return true;
     }
     return false;
@@ -108,7 +130,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(
 
 browser.runtime.onMessage.addListener(
     (message, sender) => {
-        if (!message || typeof message !== "object" || !message.action) {
+        if (!message || typeof message !== "object" || !message.action || sender.id !== browser.runtime.id) {
             return;
         }
         if (message.action === "openOptions") {
@@ -124,7 +146,7 @@ browser.runtime.onMessage.addListener(
             registerComPassword(message.payload);
         }
         if (message.action === "validateComPassword") {
-            return Promise.resolve(validateComPassword(message.payload));
+            return Promise.resolve(validateComPassword(sender.tab.id, message.payload));
         }
         if (message.action === "getHeader") {
             return Promise.resolve(getHeader(message.payload));

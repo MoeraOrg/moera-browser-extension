@@ -47,10 +47,16 @@ function initializeCommunication() {
             });
     });
 
+    browser.runtime.onMessage.addListener(
+        (message, sender) => {
+            window.postMessage(message, origin);
+        }
+    );
+
     window.postMessage({
         source: "moera",
         action: "loadData"
-    }, "*");
+    }, origin);
 }
 
 isInitializationEnabled().then(enabled => {
