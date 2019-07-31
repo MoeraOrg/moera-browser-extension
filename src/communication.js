@@ -2,10 +2,10 @@ import browser from 'webextension-polyfill';
 
 async function isInitializationEnabled() {
     let body = document.getElementsByTagName("body")[0];
-    if (body.getAttribute("data-com-initialized") != null) {
+    if ("comInitialized" in body.dataset) {
         return false;
     }
-    const comPassword = body.getAttribute("data-com-password");
+    const comPassword = body.dataset.comPassword;
     if (comPassword == null) {
         return false;
     }
@@ -14,8 +14,8 @@ async function isInitializationEnabled() {
         payload: comPassword
     });
     if (response) {
-        body.setAttribute("data-com-initialized", "yes");
-        body.removeAttribute("data-com-password");
+        body.dataset.comInitialized = "yes";
+        delete body.dataset.comPassword;
     } else {
         // Forced reload will cause fetching of the page again from the server
         // and activation of the extension that will generate a new password
