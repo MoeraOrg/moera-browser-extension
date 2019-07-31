@@ -2,16 +2,16 @@ import browser from 'webextension-polyfill';
 import * as Base64js from 'base64-js';
 
 let scriptCode = '(' + function() {
-    fetch("%URL%")
+    fetch("%URL%", {redirect: "follow"})
         .then(response => {
             if (response.ok) {
-                return response.text();
+                return Promise.all([response.text(), response.url]);
             }
             throw new Error("Client download failed.");
         })
-        .then(text => {
+        .then(([text, baseUrl]) => {
             const content = text
-                .replace(/<head>/i, "<head><base href='%URL%'>")
+                .replace(/<head>/i, `<head><base href='${baseUrl}'>`)
                 .replace(/<body>/i, "<body data-com-password='%PASSWD%' data-x-moera='%HEADER%'>");
             document.open("text/html", "replace");
             document.write(content);
