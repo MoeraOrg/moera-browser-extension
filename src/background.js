@@ -41,18 +41,14 @@ function scanHeaders({responseHeaders, url}) {
     }
 }
 
-function modifyPage({url}) {
+function modifyPage({tabId, url}) {
     if (matchingUrls.has(url)) {
-        browser.tabs.executeScript({
-            file: "/content.js"
-        });
+        browser.tabs.executeScript(tabId, {file: "/content.js"});
     }
 }
 
-function startCommunication() {
-    browser.tabs.executeScript({
-        file: "/communication.js"
-    });
+function startCommunication({tabId}) {
+    browser.tabs.executeScript(tabId, {file: "/communication.js"});
     return {
         cancel: true
     };
