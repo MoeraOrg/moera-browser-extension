@@ -25,7 +25,8 @@ async function isInitializationEnabled() {
 }
 
 function initializeCommunication() {
-    window.addEventListener("message", (event) => {
+    const origin = window.location.href;
+    window.addEventListener("message", event => {
         // Only accept messages from the same frame
         if (event.source !== window) {
             return;
@@ -41,7 +42,7 @@ function initializeCommunication() {
         browser.runtime.sendMessage(message)
             .then(response => {
                 if (response !== null && typeof response === "object") {
-                    window.postMessage(response, "*");
+                    window.postMessage(response, origin);
                 }
             });
     });
