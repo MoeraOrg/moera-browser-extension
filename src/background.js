@@ -67,6 +67,10 @@ async function loadData() {
     }
 }
 
+function storeData(clientData) {
+    browser.storage.local.set({clientData});
+}
+
 function registerComPassword(password) {
     comPasswords.set(password, {accessed: Date.now()});
     cleanupFlash(comPasswords, MAX_COM_PASSWORDS_SIZE);
@@ -115,7 +119,7 @@ browser.runtime.onMessage.addListener(
             browser.runtime.openOptionsPage();
         }
         if (message.action === "storeData") {
-            browser.storage.local.set({clientData: message.payload});
+            storeData(message.payload);
         }
         if (message.action === "loadData") {
             return loadData();
