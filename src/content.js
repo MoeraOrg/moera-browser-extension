@@ -1,6 +1,8 @@
 import browser from 'webextension-polyfill';
 import * as Base64js from 'base64-js';
 
+import { getSettings } from "./settings";
+
 let scriptCode = '(' + function() {
     fetch("%URL%", {redirect: "follow"})
         .then(response => {
@@ -28,27 +30,27 @@ function randomPassword() {
     return Base64js.fromByteArray(buf);
 }
 
-browser.storage.local.get("settings")
-    .then(data => {
-        if (data.settings && data.settings.clientUrl) {
-            const comPassword = randomPassword();
-            browser.runtime.sendMessage({action: "registerComPassword", payload: comPassword});
-            browser.runtime.sendMessage({action: "getHeader", payload: window.location.href})
-                .then(header => {
-                    scriptCode = scriptCode
-                        .replace(/%URL%/g, data.settings.clientUrl)
-                        .replace(/%PASSWD%/g, comPassword)
-                        .replace(/%HEADER%/g, header);
-                    let script = document.createElement("script");
-                    script.textContent = scriptCode;
-                    (document.head || document.documentElement).appendChild(script);
-                });
-        } else {
-            const ok = window.confirm(
-                "Moera client URL is not set in the add-on settings. "
-                + "Open the settings page?");
-            if (ok) {
-                browser.runtime.sendMessage({action: "openOptions"});
-            }
+async function load() {
+    const {clientUrl} = await getSettings();
+    if (clientUrl) {
+        const comPassword = randomPassword();
+        await browser.runtime.sendMessage({action: "registerComPassword", payload: comPassword});
+        const header = await browser.runtime.sendMessage({action: "getHeader", payload: window.location.href});
+        scriptCode = scriptCode
+            .replace(/%URL%/g, clientUrl)
+            .replace(/%PASSWD%/g, comPassword)
+            .replace(/%HEADER%/g, header);
+        let script = document.createElement("script");
+        script.textContent = scriptCode;
+        (document.head || document.documentElement).appendChild(script);
+    } else {
+        const ok = window.confirm(
+            "Moera client URL is not set in the add-on settings. "
+            + "Open the settings page?");
+        if (ok) {
+            browser.runtime.sendMessage({action: "openOptions"});
         }
-    });
+    }
+}
+
+load();

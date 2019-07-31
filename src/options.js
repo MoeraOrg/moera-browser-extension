@@ -1,19 +1,15 @@
-import browser from "webextension-polyfill";
+import browser from 'webextension-polyfill';
+
+import { getSettings, setSettings } from "./settings";
 
 async function updateUI() {
-    const {settings} = await browser.storage.local.get("settings");
-    if (settings.clientUrl) {
-        document.querySelector("#client-url").value = settings.clientUrl;
-    }
+    const {clientUrl} = await getSettings();
+    document.querySelector("#client-url").value = clientUrl;
 }
 
 async function saveSettings() {
-    const clientUrl = document.querySelector("#client-url").value; 
-    await browser.storage.local.set({
-        settings: {
-            clientUrl
-        }
-    });
+    const clientUrl = document.querySelector("#client-url").value;
+    setSettings({clientUrl});
 }
 
 function onError(e) {
