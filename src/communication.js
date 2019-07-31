@@ -1,5 +1,29 @@
 import browser from 'webextension-polyfill';
 
+async function isInitializationEnabled() {
+    let body = document.getElementsByTagName("body")[0];
+    if (body.getAttribute("data-com-initialized") != null) {
+        return false;
+    }
+    const comPassword = body.getAttribute("data-com-password");
+    if (comPassword == null) {
+        return false;
+    }
+    const response = await browser.runtime.sendMessage({
+        action: "validateComPassword",
+        payload: comPassword
+    });
+    if (response) {
+        body.setAttribute("data-com-initialized", "yes");
+        body.removeAttribute("data-com-password");
+    } else {
+        // Forced reload will cause fetching of the page again from the server
+        // and activation of the extension that will generate a new password
+        window.location.assign(window.location);
+    }
+    return response;
+}
+
 function initializeCommunication() {
     window.addEventListener("message", (event) => {
         // Only accept messages from the same frame
@@ -26,30 +50,6 @@ function initializeCommunication() {
         source: "moera",
         action: "loadData"
     }, "*");
-}
-
-async function isInitializationEnabled() {
-    let body = document.getElementsByTagName("body")[0];
-    if (body.getAttribute("data-com-initialized") != null) {
-        return false;
-    }
-    const comPassword = body.getAttribute("data-com-password");
-    if (comPassword == null) {
-        return false;
-    }
-    const response = await browser.runtime.sendMessage({
-        action: "validateComPassword",
-        payload: comPassword
-    });
-    if (response) {
-        body.setAttribute("data-com-initialized", "yes");
-        body.removeAttribute("data-com-password");
-    } else {
-        // Forced reload will cause fetching of the page again from the server
-        // and activation of the extension that will generate a new password
-        window.location.assign(window.location);
-    }
-    return response;
 }
 
 isInitializationEnabled().then(enabled => {
