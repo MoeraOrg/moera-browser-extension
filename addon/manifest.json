@@ -3,6 +3,8 @@
     "name": "Moera",
     "version": "0.1.0",
     "description": "Moera Decentralized Social Network.",
+    "author": "Shmuel Leib Melamud",
+    "homepage_url", "https://github.com/MoeraOrg/moera-browser-extension",
 
     "icons": {
         "32": "icons/moera-32.png",
