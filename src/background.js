@@ -33,16 +33,14 @@ function broadcastMessage(message) {
 }
 
 function sendHeaders({requestHeaders}) {
-    return new Promise((resolve, reject) => {
-        let headers = requestHeaders.filter(header => header.name !== "X-Accept-Moera");
-        headers.push({
-            name: "X-Accept-Moera",
-            value: "1.0"
-        });
-        resolve({
-            requestHeaders: headers
-        });
+    let headers = requestHeaders.filter(header => header.name !== "X-Accept-Moera");
+    headers.push({
+        name: "X-Accept-Moera",
+        value: "1.0"
     });
+    return {
+        requestHeaders: headers
+    };
 }
 
 function scanHeaders({responseHeaders, url}) {
