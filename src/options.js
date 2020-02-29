@@ -1,6 +1,4 @@
-import browser from 'webextension-polyfill';
-
-import { getSettings, setSettings } from "./settings";
+import { getSettings, setSettings } from "./data";
 
 async function updateUI() {
     const {clientUrl} = await getSettings();
@@ -9,11 +7,7 @@ async function updateUI() {
 
 async function saveSettings() {
     const clientUrl = document.querySelector("#client-url").value;
-    setSettings({clientUrl});
-}
-
-function onError(e) {
-    console.error(e);
+    await setSettings({clientUrl});
 }
 
 document.addEventListener("DOMContentLoaded", updateUI);

@@ -1,12 +1,12 @@
-import browser from "webextension-polyfill";
+import browser from 'webextension-polyfill';
+
+import { addTab, loadData, storeData } from "./data";
 
 const MAX_MATCHING_URLS_SIZE = 100;
 let matchingUrls = new Map();
 
 const MAX_COM_PASSWORDS_SIZE = 100;
 let comPasswords = new Map();
-
-let activeTabs = [];
 
 function cleanupFlash(flash, maxSize) {
     if (flash.size <= maxSize) {
@@ -18,18 +18,6 @@ function cleanupFlash(flash, maxSize) {
     for (let i = 0; i < elements.length - maxSize; i++) {
         flash.delete(elements[i].key);
     }
-}
-
-function broadcastMessage(message) {
-    let closedTabs = [];
-    activeTabs.forEach(tabId => browser.tabs.sendMessage(tabId, message)
-                                            .catch(() => closedTabs.push(tabId)));
-    closedTabs.forEach(tabId => {
-        const i = activeTabs.indexOf(tabId);
-        if (i > 0) {
-            activeTabs.splice(i, 1);
-        }
-    })
 }
 
 function sendHeaders({requestHeaders}) {
@@ -66,24 +54,6 @@ function startCommunication({tabId}) {
     };
 }
 
-async function loadData() {
-    const {clientData} = await browser.storage.local.get("clientData");
-    return {
-        source: "moera",
-        action: "loadedData",
-        payload: clientData
-    }
-}
-
-function storeData(clientData) {
-    browser.storage.local.set({clientData});
-    broadcastMessage({
-        source: "moera",
-        action: "loadedData",
-        payload: clientData
-    });
-}
-
 function registerComPassword(password) {
     comPasswords.set(password, {accessed: Date.now()});
     cleanupFlash(comPasswords, MAX_COM_PASSWORDS_SIZE);
@@ -92,9 +62,7 @@ function registerComPassword(password) {
 function validateComPassword(tabId, password) {
     if (comPasswords.has(password)) {
         comPasswords.set(password, {accessed: Date.now()});
-        if (!activeTabs.includes(tabId)) {
-            activeTabs.push(tabId);
-        }
+        addTab(tabId);
         return true;
     }
     return false;
