@@ -1,10 +1,12 @@
 import browser from 'webextension-polyfill';
+import AsyncLock from 'async-lock';
 
 const DEFAULT_SETTINGS = {
     clientUrl: "https://client.moera.org/releases/latest"
 };
 
 let activeTabs = [];
+const dataLock = new AsyncLock();
 
 export async function getSettings() {
     const data = await browser.storage.local.get("settings");
@@ -39,12 +41,23 @@ export async function loadData() {
     return {
         source: "moera",
         action: "loadedData",
-        payload: clientData
-    }
+        payload: {
+            version: 2,
+            ...clientData
+        }
+    };
 }
 
-export function storeData(clientData) {
-    browser.storage.local.set({clientData});
+export async function storeData(data) {
+    const clientData = await dataLock.acquire("clientData", async () => {
+        let {clientData} = await browser.storage.local.get("clientData");
+        clientData = {
+            ...clientData,
+            ...data
+        };
+        browser.storage.local.set({clientData});
+        return clientData;
+    });
     broadcastMessage({
         source: "moera",
         action: "loadedData",
