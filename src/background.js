@@ -99,23 +99,22 @@ browser.runtime.onMessage.addListener(
         if (!message || typeof message !== "object" || !message.action || sender.id !== browser.runtime.id) {
             return;
         }
-        if (message.action === "openOptions") {
-            browser.runtime.openOptionsPage();
-        }
-        if (message.action === "storeData") {
-            storeData(message.payload);
-        }
-        if (message.action === "loadData") {
-            return loadData();
-        }
-        if (message.action === "registerComPassword") {
-            registerComPassword(message.payload);
-        }
-        if (message.action === "validateComPassword") {
-            return Promise.resolve(validateComPassword(sender.tab.id, message.payload));
-        }
-        if (message.action === "getHeader") {
-            return Promise.resolve(getHeader(message.payload));
+        switch (message.action) {
+            case "openOptions":
+                browser.runtime.openOptionsPage();
+                break;
+            case "registerComPassword":
+                registerComPassword(message.payload);
+                break;
+            case "validateComPassword":
+                return Promise.resolve(validateComPassword(sender.tab.id, message.payload));
+            case "getHeader":
+                return Promise.resolve(getHeader(message.payload));
+            case "loadData":
+                return loadData();
+            case "storeData":
+                storeData(message.payload);
+                break;
         }
     }
 );
