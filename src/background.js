@@ -59,7 +59,7 @@ function registerComPassword(password) {
     cleanupFlash(comPasswords, MAX_COM_PASSWORDS_SIZE);
 }
 
-function validateComPassword(tabId, password) {
+async function validateComPassword(tabId, password) {
     if (comPasswords.has(password)) {
         comPasswords.set(password, {accessed: Date.now()});
         addTab(tabId);
@@ -68,7 +68,7 @@ function validateComPassword(tabId, password) {
     return false;
 }
 
-function getHeader(url) {
+async function getHeader(url) {
     return matchingUrls.has(url) ? matchingUrls.get(url).header : "";
 }
 
@@ -107,9 +107,9 @@ browser.runtime.onMessage.addListener(
                 registerComPassword(message.payload);
                 break;
             case "validateComPassword":
-                return Promise.resolve(validateComPassword(sender.tab.id, message.payload));
+                return validateComPassword(sender.tab.id, message.payload);
             case "getHeader":
-                return Promise.resolve(getHeader(message.payload));
+                return getHeader(message.payload);
             case "loadData":
                 return loadData();
             case "storeData":
