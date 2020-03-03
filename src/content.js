@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import * as Base64js from 'base64-js';
 
-import { getSettings } from "./data";
+import { getClientUrl } from "./data";
 
 let scriptCode = '(' + function() {
     fetch("%URL%", {redirect: "follow"})
@@ -31,7 +31,7 @@ function randomPassword() {
 }
 
 async function load() {
-    const {clientUrl} = await getSettings();
+    const clientUrl = await getClientUrl();
     if (clientUrl) {
         const comPassword = randomPassword();
         await browser.runtime.sendMessage({action: "registerComPassword", payload: comPassword});

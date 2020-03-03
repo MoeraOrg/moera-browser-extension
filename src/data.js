@@ -22,24 +22,20 @@ export async function migrateStorageToV2() {
     });
 }
 
-async function getClientUrl() {
+export async function getSettings() {
+    let {defaultClient, customClientUrl} = await browser.storage.local.get(["defaultClient", "customClientUrl"]);
+    defaultClient = defaultClient != null ? defaultClient : true;
+    customClientUrl = customClientUrl ? customClientUrl : DEFAULT_CLIENT_URL;
+    return {defaultClient, customClientUrl};
+}
+
+export async function setSettings({defaultClient, customClientUrl}) {
+    await browser.storage.local.set({defaultClient, customClientUrl});
+}
+
+export async function getClientUrl() {
     const {defaultClient, customClientUrl} = await browser.storage.local.get(["defaultClient", "customClientUrl"]);
     return defaultClient == null || defaultClient ? DEFAULT_CLIENT_URL : customClientUrl;
-}
-
-export async function getSettings() {
-    return {
-        clientUrl: await getClientUrl()
-    }
-}
-
-export async function setSettings({clientUrl}) {
-    const data = {};
-    data.defaultClient = clientUrl === DEFAULT_CLIENT_URL;
-    if (clientUrl !== DEFAULT_CLIENT_URL) {
-        data.customClientUrl = clientUrl;
-    }
-    await browser.storage.local.set(data);
 }
 
 export async function addTab(tabId) {

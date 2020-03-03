@@ -1,8 +1,19 @@
-LABEL {
-    font-weight: bold;
+BODY {
+    padding: 1em;
 }
 
-#client-url {
+LABEL {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 2ex;
+    width: 100%;
+}
+
+#custom-client-url-section {
+    display: none;
+}
+
+#custom-client-url {
     width: 100%;
 }
 
