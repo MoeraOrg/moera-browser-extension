@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 
-import { addTab, loadData, storeData } from "./data";
+import { addTab, isStorageV1, loadData, migrateStorageToV2, storeData } from "./data";
 
 const MAX_MATCHING_URLS_SIZE = 100;
 let matchingUrls = new Map();
@@ -62,7 +62,7 @@ function registerComPassword(password) {
 async function validateComPassword(tabId, password) {
     if (comPasswords.has(password)) {
         comPasswords.set(password, {accessed: Date.now()});
-        addTab(tabId);
+        await addTab(tabId);
         return true;
     }
     return false;
@@ -71,6 +71,12 @@ async function validateComPassword(tabId, password) {
 async function getHeader(url) {
     return matchingUrls.has(url) ? matchingUrls.get(url).header : "";
 }
+
+browser.runtime.onInstalled.addListener(async () => {
+    if (await isStorageV1()) {
+        await migrateStorageToV2();
+    }
+});
 
 browser.webRequest.onBeforeSendHeaders.addListener(
     sendHeaders,
@@ -111,9 +117,9 @@ browser.runtime.onMessage.addListener(
             case "getHeader":
                 return getHeader(message.payload);
             case "loadData":
-                return loadData();
+                return loadData(sender.tab.id);
             case "storeData":
-                storeData(message.payload);
+                storeData(sender.tab.id, message.payload);
                 break;
         }
     }
