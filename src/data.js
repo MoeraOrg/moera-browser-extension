@@ -1,5 +1,6 @@
 import browser from 'webextension-polyfill';
 import AsyncLock from 'async-lock';
+import ObjectPath from 'object-path';
 
 const DEFAULT_CLIENT_URL = "https://client.moera.org/releases/latest";
 
@@ -14,12 +15,19 @@ export async function isStorageV1() {
 export async function migrateStorageToV2() {
     const {settings, clientData} = await browser.storage.local.get(["settings", "clientData"]);
     await browser.storage.local.clear();
-    const clientUrl = settings && settings.clientUrl ? settings.clientUrl : DEFAULT_CLIENT_URL;
-    await browser.storage.local.set({
+    const clientUrl = ObjectPath.get(settings, "clientUrl", DEFAULT_CLIENT_URL);
+    const data = {
         defaultClient: clientUrl === DEFAULT_CLIENT_URL,
         customClientUrl: clientUrl !== DEFAULT_CLIENT_URL ?  clientUrl : "",
-        [`clientData;${clientUrl}`]: clientData
-    });
+    };
+    const homeRoot = ObjectPath.get(clientData, "home.location");
+    ObjectPath.del(clientData, "home.location");
+    if (homeRoot) {
+        data[`roots;${clientUrl}`] = [homeRoot];
+        data[`currentRoot;${clientUrl}`] = homeRoot;
+        data[`clientData;${clientUrl};${homeRoot}`] = clientData;
+    }
+    await browser.storage.local.set(data);
 }
 
 export async function getSettings() {
@@ -59,34 +67,69 @@ async function getTabClientUrl(tabId) {
     return clientUrl != null ? clientUrl : await getClientUrl();
 }
 
-export async function loadData(tabId) {
-    const key = "clientData;" + await getTabClientUrl(tabId);
-    const {[key]: clientData} = await browser.storage.local.get(key);
+function loadedData(homeRoot, clientData) {
+    let data = {};
+    if (homeRoot) {
+        data = {...clientData};
+        ObjectPath.set(data, "home.location", homeRoot);
+    }
     return {
         source: "moera",
         action: "loadedData",
         payload: {
             version: 2,
-            ...clientData
+            ...data
         }
     };
 }
 
+export async function loadData(tabId) {
+    const clientUrl = await getTabClientUrl(tabId);
+    const rootKey = `currentRoot;${clientUrl}`;
+    const {[rootKey]: homeRoot} = await browser.storage.local.get(rootKey);
+    if (!homeRoot) {
+        return loadedData();
+    }
+    const dataKey = `clientData;${clientUrl};${homeRoot}`;
+    const {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
+    return loadedData(homeRoot, clientData);
+}
+
 export async function storeData(tabId, data) {
     const clientUrl = await getTabClientUrl(tabId);
-    const clientData = await dataLock.acquire("clientData", async () => {
-        const key = `clientData;${clientUrl}`;
-        let {[key]: clientData} = await browser.storage.local.get(key);
+    const {homeRoot, clientData} = await dataLock.acquire("clientData", async () => {
+        const rootKey = `currentRoot;${clientUrl}`;
+        let {[rootKey]: homeRoot} = await browser.storage.local.get(rootKey);
+        const location = ObjectPath.get(data, "home.location");
+        if (location && homeRoot !== location) {
+            if (!homeRoot) {
+                await browser.storage.local.set({[rootKey]: location});
+            }
+            homeRoot = location;
+            const rootsKey = `roots;${clientUrl}`;
+            let {[rootsKey]: roots} = await browser.storage.local.get(rootsKey);
+            if (roots == null) {
+                roots = [];
+            }
+            if (!roots.includes(homeRoot)) {
+                roots.push(homeRoot);
+                await browser.storage.local.set({[rootsKey]: roots});
+            }
+        }
+        if (!homeRoot) {
+            return {};
+        }
+
+        const dataKey = `clientData;${clientUrl};${homeRoot}`;
+        let {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
         clientData = {
             ...clientData,
             ...data
         };
-        browser.storage.local.set({[key]: clientData});
-        return clientData;
+        ObjectPath.del(clientData, "home.location");
+        browser.storage.local.set({[dataKey]: clientData});
+
+        return {homeRoot, clientData};
     });
-    broadcastMessage({
-        source: "moera",
-        action: "loadedData",
-        payload: clientData
-    }, clientUrl);
+    broadcastMessage(loadedData(homeRoot, clientData), clientUrl);
 }
