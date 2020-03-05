@@ -24,7 +24,7 @@ export async function migrateStorageToV2() {
     ObjectPath.del(clientData, "home.location");
     ObjectPath.del(clientData, "clientId");
     if (homeRoot) {
-        data[`roots;${clientUrl}`] = [homeRoot];
+        data[`roots;${clientUrl}`] = [{url: homeRoot}];
         data[`currentRoot;${clientUrl}`] = homeRoot;
         data[`clientData;${clientUrl};${homeRoot}`] = clientData;
     }
@@ -112,8 +112,8 @@ export async function storeData(tabId, data) {
             if (roots == null) {
                 roots = [];
             }
-            if (!roots.includes(homeRoot)) {
-                roots.push(homeRoot);
+            if (roots.find(r => r.url === homeRoot) == null) {
+                roots.push({url: homeRoot});
                 await browser.storage.local.set({[rootsKey]: roots});
             }
         }
@@ -148,10 +148,10 @@ export async function deleteData(tabId, location) {
         }
         const rootsKey = `roots;${clientUrl}`;
         let {[rootsKey]: roots} = await browser.storage.local.get(rootsKey);
-        if (!roots.includes(location) && location !== homeRoot) {
+        if (roots.find(r => r.url === homeRoot) == null && location !== homeRoot) {
             return {};
         }
-        roots = roots.filter(r => r !== location);
+        roots = roots.filter(r => r.url !== location);
         await browser.storage.local.set({[rootsKey]: roots});
         await browser.storage.local.remove(`clientData;${clientUrl};${location}`);
 
