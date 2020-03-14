@@ -141,7 +141,7 @@ export async function storeData(tabId, data) {
 
 export async function deleteData(tabId, location) {
     const clientUrl = await getTabClientUrl(tabId);
-    const {loadedData} = await dataLock.acquire("clientData", async () => {
+    const data = await dataLock.acquire("clientData", async () => {
         const rootKey = `currentRoot;${clientUrl}`;
         const rootsKey = `roots;${clientUrl}`;
         let {[rootKey]: homeRoot, [rootsKey]: roots} = await browser.storage.local.get([rootKey, rootsKey]);
@@ -149,7 +149,7 @@ export async function deleteData(tabId, location) {
             location = homeRoot;
         }
         if (roots.find(r => r.url === homeRoot) == null && location !== homeRoot) {
-            return {};
+            return null;
         }
         roots = roots.filter(r => r.url !== location);
         await browser.storage.local.set({[rootsKey]: roots});
@@ -158,18 +158,18 @@ export async function deleteData(tabId, location) {
         if (location === homeRoot) {
             if (roots.length === 0) {
                 await browser.storage.local.remove(rootKey);
-                return {loadedData: loadedData(null, null, roots)};
+                return loadedData(homeRoot, {}, roots);
             }
             homeRoot = roots[roots.length - 1].url;
             await browser.storage.local.set({[rootKey]: homeRoot});
 
             const dataKey = `clientData;${clientUrl};${homeRoot}`;
             const {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
-            return {loadedData: loadedData(homeRoot, clientData, roots)};
+            return loadedData(homeRoot, clientData, roots);
         }
-        return {loadedData: loadedData(null, null, roots)};
+        return loadedData(homeRoot, {}, roots);
     });
-    if (loadedData != null) {
-        broadcastMessage(loadedData, clientUrl);
+    if (data != null) {
+        broadcastMessage(data, clientUrl);
     }
 }
