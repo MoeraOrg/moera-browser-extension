@@ -87,6 +87,20 @@ function loadedData(homeRoot, clientData, roots) {
     };
 }
 
+function getRootName(roots, location) {
+    const root = roots.find(r => r.url === location);
+    return root ? root.name : null;
+}
+
+function setRoot(roots, location, nodeName) {
+    if (roots.find(r => r.url === location) == null) {
+        roots.push({url: location, name: nodeName});
+    } else {
+        roots = roots.map(r => r.url === location ? {url: location, name: nodeName} : r);
+    }
+    return roots;
+}
+
 export async function loadData(tabId) {
     const clientUrl = await getTabClientUrl(tabId);
     const rootKey = `currentRoot;${clientUrl}`;
@@ -97,6 +111,7 @@ export async function loadData(tabId) {
     }
     const dataKey = `clientData;${clientUrl};${homeRoot}`;
     const {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
+    ObjectPath.set(clientData, "home.nodeName", getRootName(roots, homeRoot));
     return loadedData(homeRoot, clientData, roots);
 }
 
@@ -116,11 +131,7 @@ export async function storeData(tabId, data) {
                 await browser.storage.local.set({[rootKey]: location});
                 homeRoot = location;
             }
-            if (roots.find(r => r.url === homeRoot) == null) {
-                roots.push({url: homeRoot, name: nodeName});
-            } else {
-                roots = roots.map(r => r.url === homeRoot ? {url: homeRoot, name: nodeName} : r);
-            }
+            roots = setRoot(roots, homeRoot, nodeName);
             await browser.storage.local.set({[rootsKey]: roots});
         }
         if (!homeRoot) {
@@ -167,10 +178,12 @@ export async function deleteData(tabId, location) {
                 return loadedData(homeRoot, {}, roots);
             }
             homeRoot = roots[roots.length - 1].url;
+            const nodeName = roots[roots.length - 1].name;
             await browser.storage.local.set({[rootKey]: homeRoot});
 
             const dataKey = `clientData;${clientUrl};${homeRoot}`;
             const {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
+            ObjectPath.set(clientData, "home.nodeName", nodeName);
             return loadedData(homeRoot, clientData, roots);
         }
         return loadedData(homeRoot, {}, roots);
@@ -190,13 +203,15 @@ export async function switchData(tabId, location) {
             roots = [];
         }
 
-        if (!location || location === homeRoot || roots.find(r => r.url === location) == null) {
+        const root = roots.find(r => r.url === location);
+        if (!location || location === homeRoot || root == null) {
             return loadedData();
         }
         await browser.storage.local.set({[rootKey]: location});
 
         const dataKey = `clientData;${clientUrl};${location}`;
         const {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
+        ObjectPath.set(clientData, "home.nodeName", root.name);
         return loadedData(location, clientData, roots);
     });
     if (data != null) {
