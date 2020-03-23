@@ -110,13 +110,18 @@ export async function storeData(tabId, data) {
             roots = [];
         }
         const location = ObjectPath.get(data, "home.location");
-        if (location && homeRoot !== location) {
-            await browser.storage.local.set({[rootKey]: location});
-            homeRoot = location;
-            if (roots.find(r => r.url === homeRoot) == null) {
-                roots.push({url: homeRoot});
-                await browser.storage.local.set({[rootsKey]: roots});
+        const nodeName = ObjectPath.get(data, "home.nodeName");
+        if (location) {
+            if (homeRoot !== location) {
+                await browser.storage.local.set({[rootKey]: location});
+                homeRoot = location;
             }
+            if (roots.find(r => r.url === homeRoot) == null) {
+                roots.push({url: homeRoot, name: nodeName});
+            } else {
+                roots = roots.map(r => r.url === homeRoot ? {url: homeRoot, name: nodeName} : r);
+            }
+            await browser.storage.local.set({[rootsKey]: roots});
         }
         if (!homeRoot) {
             return loadedData();
@@ -132,6 +137,7 @@ export async function storeData(tabId, data) {
 
         const storedClientData = {...clientData};
         ObjectPath.del(storedClientData, "clientId");
+        ObjectPath.del(storedClientData, "home.nodeName");
         browser.storage.local.set({[dataKey]: storedClientData});
 
         return loadedData(homeRoot, clientData, roots);
