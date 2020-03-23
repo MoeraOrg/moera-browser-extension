@@ -173,3 +173,27 @@ export async function deleteData(tabId, location) {
         broadcastMessage(data, clientUrl);
     }
 }
+
+export async function switchData(tabId, location) {
+    const clientUrl = await getTabClientUrl(tabId);
+    const data = await dataLock.acquire("clientData", async () => {
+        const rootKey = `currentRoot;${clientUrl}`;
+        const rootsKey = `roots;${clientUrl}`;
+        let {[rootKey]: homeRoot, [rootsKey]: roots} = await browser.storage.local.get([rootKey, rootsKey]);
+        if (roots == null) {
+            roots = [];
+        }
+
+        if (!location || location === homeRoot || roots.find(r => r.url === location) == null) {
+            return loadedData();
+        }
+        await browser.storage.local.set({[rootKey]: location});
+
+        const dataKey = `clientData;${clientUrl};${location}`;
+        const {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
+        return loadedData(location, clientData, roots);
+    });
+    if (data != null) {
+        broadcastMessage(data, clientUrl);
+    }
+}

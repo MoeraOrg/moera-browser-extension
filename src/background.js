@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 
-import { addTab, deleteData, isStorageV1, loadData, migrateStorageToV2, storeData } from "./data";
+import { addTab, deleteData, isStorageV1, loadData, migrateStorageToV2, storeData, switchData } from "./data";
 
 const MAX_MATCHING_URLS_SIZE = 100;
 let matchingUrls = new Map();
@@ -123,6 +123,9 @@ browser.runtime.onMessage.addListener(
                 break;
             case "deleteData":
                 deleteData(sender.tab.id, message.payload);
+                break;
+            case "switchData":
+                switchData(sender.tab.id, message.payload);
                 break;
         }
     }
