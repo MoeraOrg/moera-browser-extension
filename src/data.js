@@ -2,9 +2,10 @@ import browser from 'webextension-polyfill';
 import AsyncLock from 'async-lock';
 import ObjectPath from 'object-path';
 
+import { broadcastMessage, getTabClientUrl } from "./tabs";
+
 const DEFAULT_CLIENT_URL = "https://client.moera.org/releases/latest";
 
-const activeTabs = new Map();
 const dataLock = new AsyncLock();
 
 export async function isStorageV1() {
@@ -29,43 +30,6 @@ export async function migrateStorageToV2() {
         data[`clientData;${clientUrl};${homeRoot}`] = clientData;
     }
     await browser.storage.local.set(data);
-}
-
-export async function getSettings() {
-    let {defaultClient, customClientUrl} = await browser.storage.local.get(["defaultClient", "customClientUrl"]);
-    defaultClient = defaultClient != null ? defaultClient : true;
-    customClientUrl = customClientUrl ? customClientUrl : DEFAULT_CLIENT_URL;
-    return {defaultClient, customClientUrl};
-}
-
-export async function setSettings({defaultClient, customClientUrl}) {
-    await browser.storage.local.set({defaultClient, customClientUrl});
-}
-
-export async function getClientUrl() {
-    const {defaultClient, customClientUrl} = await browser.storage.local.get(["defaultClient", "customClientUrl"]);
-    return defaultClient == null || defaultClient ? DEFAULT_CLIENT_URL : customClientUrl;
-}
-
-export async function addTab(tabId) {
-    const clientUrl = await getClientUrl();
-    activeTabs.set(tabId, {clientUrl});
-}
-
-function broadcastMessage(message, clientUrl) {
-    let closedTabs = [];
-    activeTabs.forEach((value, tabId) => {
-        if (value.clientUrl === clientUrl) {
-            browser.tabs.sendMessage(tabId, message)
-                .catch(() => closedTabs.push(tabId));
-        }
-    });
-    closedTabs.forEach(tabId => activeTabs.delete(tabId));
-}
-
-async function getTabClientUrl(tabId) {
-    const {clientUrl} = activeTabs.get(tabId);
-    return clientUrl != null ? clientUrl : await getClientUrl();
 }
 
 function loadedData(homeRoot, clientData, roots) {

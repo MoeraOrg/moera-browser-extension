@@ -1,4 +1,4 @@
-import { getSettings, setSettings } from "./data";
+import { getSettings, setSettings } from "./settings";
 
 function isDefaultClient() {
     return document.querySelector("#default-client").checked;

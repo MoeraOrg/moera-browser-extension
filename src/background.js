@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 
-import { addTab, deleteData, isStorageV1, loadData, migrateStorageToV2, storeData, switchData } from "./data";
+import { deleteData, isStorageV1, loadData, migrateStorageToV2, storeData, switchData } from "./data";
+import { addTab } from "./tabs";
 
 const MAX_MATCHING_URLS_SIZE = 100;
 let matchingUrls = new Map();

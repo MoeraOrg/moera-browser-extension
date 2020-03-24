@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import * as Base64js from 'base64-js';
 
-import { getClientUrl } from "./data";
+import { getClientUrl } from "./settings";
 
 let scriptCode = '(' + function() {
     fetch("%URL%", {redirect: "follow"})
