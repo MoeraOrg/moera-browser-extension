@@ -172,21 +172,22 @@ export async function deleteData(tabId, location) {
         await browser.storage.local.set({[rootsKey]: roots});
         await browser.storage.local.remove(`clientData;${clientUrl};${location}`);
 
+        let nodeName;
         if (location === homeRoot) {
             if (roots.length === 0) {
                 await browser.storage.local.remove(rootKey);
                 return loadedData(homeRoot, {}, roots);
             }
             homeRoot = roots[roots.length - 1].url;
-            const nodeName = roots[roots.length - 1].name;
+            nodeName = roots[roots.length - 1].name;
             await browser.storage.local.set({[rootKey]: homeRoot});
-
-            const dataKey = `clientData;${clientUrl};${homeRoot}`;
-            const {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
-            ObjectPath.set(clientData, "home.nodeName", nodeName);
-            return loadedData(homeRoot, clientData, roots);
+        } else {
+            nodeName = getRootName(roots, homeRoot);
         }
-        return loadedData(homeRoot, {}, roots);
+        const dataKey = `clientData;${clientUrl};${homeRoot}`;
+        const {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
+        ObjectPath.set(clientData, "home.nodeName", nodeName);
+        return loadedData(homeRoot, clientData, roots);
     });
     if (data != null) {
         broadcastMessage(data, clientUrl);
