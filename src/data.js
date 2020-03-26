@@ -4,8 +4,7 @@ import ObjectPath from 'object-path';
 
 import { broadcastMessage, getTabClientUrl } from "./tabs";
 import { clearNames, getNames } from "./names";
-
-const DEFAULT_CLIENT_URL = "https://client.moera.org/releases/latest";
+import { DEFAULT_CLIENT_URL } from "./settings";
 
 const dataLock = new AsyncLock();
 

@@ -1,5 +1,7 @@
 import browser from "webextension-polyfill";
 
+export const DEFAULT_CLIENT_URL = "https://client.moera.org/releases/latest";
+
 export async function getSettings() {
     let {defaultClient, customClientUrl} = await browser.storage.local.get(["defaultClient", "customClientUrl"]);
     defaultClient = defaultClient != null ? defaultClient : true;
