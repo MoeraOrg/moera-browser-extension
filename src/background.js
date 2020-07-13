@@ -23,7 +23,7 @@ function cleanupFlash(flash, maxSize) {
 }
 
 function sendHeaders({requestHeaders}) {
-    let headers = requestHeaders.filter(header => header.name !== "X-Accept-Moera");
+    let headers = requestHeaders.filter(header => header.name.toLowerCase() !== "x-accept-moera");
     headers.push({
         name: "X-Accept-Moera",
         value: "1.0"
@@ -35,7 +35,9 @@ function sendHeaders({requestHeaders}) {
 
 function scanHeaders({responseHeaders, url}) {
     if (responseHeaders) {
-        const header = responseHeaders.find(({name}) => name === "X-Moera");
+        console.log(responseHeaders);
+        const header = responseHeaders.find(({name}) => name.toLowerCase() === "x-moera");
+        console.log(header);
         if (header) {
             matchingUrls.set(url, {header: header.value, accessed: Date.now()});
             cleanupFlash(matchingUrls, MAX_MATCHING_URLS_SIZE);
