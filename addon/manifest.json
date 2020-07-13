@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Moera",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Moera Decentralized Social Network web client loader.",
     "author": "Shmuel Leib Melamud",
     "homepage_url": "https://github.com/MoeraOrg/moera-browser-extension",
