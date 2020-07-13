@@ -5,3 +5,4 @@ addon/communication.js
 addon/content.js
 addon/options.js
 addon/web-ext-artifacts/
+releases-upload/
