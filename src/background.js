@@ -35,9 +35,7 @@ function sendHeaders({requestHeaders}) {
 
 function scanHeaders({responseHeaders, url}) {
     if (responseHeaders) {
-        console.log(responseHeaders);
         const header = responseHeaders.find(({name}) => name.toLowerCase() === "x-moera");
-        console.log(header);
         if (header) {
             matchingUrls.set(url, {header: header.value, accessed: Date.now()});
             cleanupFlash(matchingUrls, MAX_MATCHING_URLS_SIZE);
