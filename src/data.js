@@ -4,9 +4,11 @@ import ObjectPath from 'object-path';
 
 import { broadcastMessage, getTabClientUrl } from "./tabs";
 import { clearNames, getNames } from "./names";
-import { DEFAULT_CLIENT_URL } from "./settings";
+import { DEFAULT_CLIENT_URL, getClientUrl } from "./settings";
 
 const dataLock = new AsyncLock();
+export let hasClientData;
+updateHasClientData();
 
 export async function isStorageV1() {
     const {settings, clientData} = await browser.storage.local.get(["settings", "clientData"]);
@@ -30,6 +32,7 @@ export async function migrateStorageToV2() {
         data[`clientData;${clientUrl};${homeRoot}`] = clientData;
     }
     await browser.storage.local.set(data);
+    updateHasClientData();
 }
 
 function loadedData(homeRoot, clientData, roots, names) {
@@ -66,6 +69,23 @@ function setRoot(roots, location, nodeName) {
         roots = roots.map(r => r.url === location ? {url: location, name: nodeName} : r);
     }
     return roots;
+}
+
+export async function hasData() {
+    const clientUrl = await getClientUrl();
+    const rootKey = `currentRoot;${clientUrl}`;
+    const rootsKey = `roots;${clientUrl}`;
+    const {[rootKey]: homeRoot, [rootsKey]: roots} = await browser.storage.local.get([rootKey, rootsKey]);
+    if (!homeRoot) {
+        return false;
+    }
+    const dataKey = `clientData;${clientUrl};${homeRoot}`;
+    const {[dataKey]: clientData} = await browser.storage.local.get(dataKey);
+    return clientData?.home?.location != null;
+}
+
+function updateHasClientData() {
+    hasData().then(v => hasClientData = v);
 }
 
 export async function loadData(tabId) {
@@ -120,6 +140,7 @@ export async function storeData(tabId, data) {
 
         return loadedData(homeRoot, clientData, roots);
     });
+    updateHasClientData();
     broadcastMessage(result, clientUrl);
 }
 
@@ -157,6 +178,7 @@ export async function deleteData(tabId, location) {
         ObjectPath.set(clientData, "home.nodeName", nodeName);
         return loadedData(homeRoot, clientData, roots);
     });
+    updateHasClientData();
     if (data != null) {
         broadcastMessage(data, clientUrl);
     }
@@ -184,6 +206,7 @@ export async function switchData(tabId, location) {
         ObjectPath.set(clientData, "home.nodeName", root.name);
         return loadedData(location, clientData, roots);
     });
+    updateHasClientData();
     if (data != null) {
         broadcastMessage(data, clientUrl);
     }

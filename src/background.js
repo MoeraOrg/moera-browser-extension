@@ -1,14 +1,14 @@
 import browser from 'webextension-polyfill';
 
-import { deleteData, isStorageV1, loadData, migrateStorageToV2, storeData, switchData } from "./data";
+import { deleteData, hasClientData, isStorageV1, loadData, migrateStorageToV2, storeData, switchData } from "./data";
 import { addTab } from "./tabs";
 import { storeName } from "./names";
 
 const MAX_MATCHING_URLS_SIZE = 100;
-let matchingUrls = new Map();
+const matchingUrls = new Map();
 
 const MAX_COM_PASSWORDS_SIZE = 100;
-let comPasswords = new Map();
+const comPasswords = new Map();
 
 function cleanupFlash(flash, maxSize) {
     if (flash.size <= maxSize) {
@@ -42,6 +42,12 @@ function getContentType(responseHeaders) {
     return m ? m[0] : null;
 }
 
+function parseHeader(value) {
+    const params = {};
+    value.split(/\s+/).map(s => s.split("=")).forEach(v => params[v[0].toLowerCase()] = decodeURIComponent(v[1]));
+    return params;
+}
+
 function scanHeaders({responseHeaders, url}) {
     if (!responseHeaders) {
         return;
@@ -51,6 +57,14 @@ function scanHeaders({responseHeaders, url}) {
         return;
     }
 
+    const params = parseHeader(header.value);
+    if (params.redirect) {
+        if (params.connectedonly !== "true" || hasClientData) {
+            return {redirectUrl: params.redirect};
+        } else {
+            return;
+        }
+    }
     matchingUrls.set(url, {header: header.value, accessed: Date.now()});
     cleanupFlash(matchingUrls, MAX_MATCHING_URLS_SIZE);
 
