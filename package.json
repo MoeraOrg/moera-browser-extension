@@ -1,6 +1,6 @@
 {
   "name": "moera-browser-extension",
-  "version": "0.2.1",
+  "version": "0.3.0-SNAPSHOT",
   "description": "Moera Decentralized Social Network browser extension.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
