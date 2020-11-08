@@ -31,6 +31,10 @@ function randomPassword() {
 }
 
 async function load() {
+    if (document.contentType !== "text/plain") {
+        return;
+    }
+
     const clientUrl = await getClientUrl();
     if (clientUrl) {
         const comPassword = randomPassword();

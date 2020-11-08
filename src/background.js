@@ -33,13 +33,31 @@ function sendHeaders({requestHeaders}) {
     };
 }
 
+function getContentType(responseHeaders) {
+    const header = responseHeaders.find(({name}) => name.toLowerCase() === "content-type");
+    if (!header) {
+        return null;
+    }
+    const m = header.value.toLowerCase().match(/^[a-z-]+\/[a-z-]+/);
+    return m ? m[0] : null;
+}
+
 function scanHeaders({responseHeaders, url}) {
-    if (responseHeaders) {
-        const header = responseHeaders.find(({name}) => name.toLowerCase() === "x-moera");
-        if (header) {
-            matchingUrls.set(url, {header: header.value, accessed: Date.now()});
-            cleanupFlash(matchingUrls, MAX_MATCHING_URLS_SIZE);
-        }
+    if (!responseHeaders) {
+        return;
+    }
+    const header = responseHeaders.find(({name}) => name.toLowerCase() === "x-moera");
+    if (!header) {
+        return;
+    }
+
+    matchingUrls.set(url, {header: header.value, accessed: Date.now()});
+    cleanupFlash(matchingUrls, MAX_MATCHING_URLS_SIZE);
+
+    if (getContentType(responseHeaders) !== "text/plain") {
+        const headers = responseHeaders.filter(({name}) => name.toLowerCase() !== "content-type");
+        headers.push({name: "Content-Type", value: "text/plain; charset=utf-8"});
+        return {responseHeaders: headers};
     }
 }
 
