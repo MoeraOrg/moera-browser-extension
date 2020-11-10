@@ -115,9 +115,14 @@ async function getHeader(url) {
     return matchingUrls.has(url) ? matchingUrls.get(url).header : "";
 }
 
-browser.runtime.onInstalled.addListener(async () => {
+browser.runtime.onInstalled.addListener(async (details) => {
     if (await isStorageV1()) {
         await migrateStorageToV2();
+    }
+    if (details.reason === "install") {
+        browser.tabs.create({
+            url : "https://web.moera.org"
+        });
     }
 });
 
