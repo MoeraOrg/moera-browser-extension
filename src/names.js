@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
-import AsyncLock from 'async-lock';
 
+import AsyncLock from "./async-lock";
 import { broadcastMessage, getTabClientUrl } from "./tabs";
 
 const NAME_TTL = 6 * 60 * 60; // seconds

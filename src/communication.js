@@ -1,13 +1,17 @@
 import browser from 'webextension-polyfill';
 
+const DISABLED = 0;
+const RESTRICTED = 1;
+const ENABLED = 2;
+
 async function isInitializationEnabled() {
     let body = document.getElementsByTagName("body")[0];
     if ("comInitialized" in body.dataset) {
-        return false;
+        return DISABLED;
     }
     const comPassword = body.dataset.comPassword;
     if (comPassword == null) {
-        return false;
+        return RESTRICTED;
     }
     const response = await browser.runtime.sendMessage({
         action: "validateComPassword",
@@ -21,10 +25,10 @@ async function isInitializationEnabled() {
         // and activation of the extension that will generate a new password
         window.location.assign(window.location);
     }
-    return response;
+    return response ? ENABLED : DISABLED;
 }
 
-function initializeCommunication() {
+function initializeCommunication(enabled) {
     const origin = window.location.href;
     window.addEventListener("message", event => {
         // Only accept messages from the same frame
@@ -36,6 +40,10 @@ function initializeCommunication() {
 
         // Only accept messages that we know are ours
         if (message === null || typeof message !== "object" || !message.source || message.source !== "moera") {
+            return;
+        }
+
+        if (enabled === RESTRICTED && message.action !== "transferredData") {
             return;
         }
 
@@ -53,12 +61,12 @@ function initializeCommunication() {
 
     window.postMessage({
         source: "moera",
-        action: "loadData"
+        action: enabled === ENABLED ? "loadData" : "transferData"
     }, origin);
 }
 
 isInitializationEnabled().then(enabled => {
-    if (enabled) {
-        initializeCommunication();
+    if (enabled !== DISABLED) {
+        initializeCommunication(enabled);
     }
 });

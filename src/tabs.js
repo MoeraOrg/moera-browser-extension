@@ -21,6 +21,6 @@ export function broadcastMessage(message, clientUrl) {
 }
 
 export async function getTabClientUrl(tabId) {
-    const {clientUrl} = activeTabs.get(tabId);
-    return clientUrl != null ? clientUrl : await getClientUrl();
+    const tab = activeTabs.get(tabId);
+    return tab != null && tab.clientUrl != null ? tab.clientUrl : await getClientUrl();
 }

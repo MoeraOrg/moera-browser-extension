@@ -1,6 +1,15 @@
 import browser from 'webextension-polyfill';
 
-import { deleteData, hasClientData, isStorageV1, loadData, migrateStorageToV2, storeData, switchData } from "./data";
+import {
+    deleteData,
+    hasClientData,
+    isStorageV1,
+    loadData,
+    migrateStorageToV2,
+    storeData,
+    switchData,
+    transferredData
+} from "./data";
 import { addTab } from "./tabs";
 import { storeName } from "./names";
 
@@ -142,10 +151,10 @@ browser.runtime.onMessage.addListener(
         switch (message.action) {
             case "openOptions":
                 browser.runtime.openOptionsPage();
-                break;
+                return;
             case "registerComPassword":
                 registerComPassword(message.payload);
-                break;
+                return;
             case "validateComPassword":
                 return validateComPassword(sender.tab.id, message.payload);
             case "getHeader":
@@ -154,16 +163,18 @@ browser.runtime.onMessage.addListener(
                 return loadData(sender.tab.id);
             case "storeData":
                 storeData(sender.tab.id, message.payload);
-                break;
+                return;
             case "deleteData":
                 deleteData(sender.tab.id, message.payload);
-                break;
+                return;
             case "switchData":
                 switchData(sender.tab.id, message.payload);
-                break;
+                return;
+            case "transferredData":
+                return transferredData(sender.tab.id, message.payload);
             case "storeName":
                 storeName(sender.tab.id, message.payload);
-                break;
+                return;
         }
     }
 );

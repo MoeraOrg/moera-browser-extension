@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
-import AsyncLock from 'async-lock';
 import ObjectPath from 'object-path';
 
+import AsyncLock from "./async-lock";
 import { broadcastMessage, getTabClientUrl } from "./tabs";
 import { clearNames, getNames } from "./names";
 import { DEFAULT_CLIENT_URL, getClientUrl } from "./settings";
@@ -210,4 +210,14 @@ export async function switchData(tabId, location) {
     if (data != null) {
         broadcastMessage(data, clientUrl);
     }
+}
+
+export async function transferredData(tabId, data) {
+    if (!hasClientData) {
+        await storeData(tabId, data);
+    }
+    return {
+        source: "moera",
+        action: "redirect"
+    };
 }
