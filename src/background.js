@@ -1,4 +1,5 @@
 import browser from 'webextension-polyfill';
+import * as Base64js from 'base64-js';
 
 import {
     deleteData,
@@ -12,6 +13,7 @@ import {
 } from "./data";
 import { addTab } from "./tabs";
 import { storeName } from "./names";
+import { getClientUrl } from "./settings";
 
 const MAX_MATCHING_URLS_SIZE = 100;
 const matchingUrls = new Map();
@@ -84,8 +86,21 @@ function scanHeaders({responseHeaders, url}) {
     }
 }
 
-function modifyPage({tabId, url}) {
+function randomComPassword() {
+    const buf = new Uint8Array(16);
+    window.crypto.getRandomValues(buf);
+    return Base64js.fromByteArray(buf);
+}
+
+async function modifyPage({tabId, url}) {
     if (matchingUrls.has(url)) {
+        const clientUrl = await getClientUrl();
+        const comPassword = randomComPassword();
+        registerComPassword(comPassword);
+        const header = getHeader(url);
+        browser.tabs.executeScript(tabId, {
+            code: `window.moera = {clientUrl: "${clientUrl}", comPassword: "${comPassword}", header: "${header}"}`
+        });
         browser.tabs.executeScript(tabId, {file: "/content.js"});
     }
 }
@@ -111,7 +126,7 @@ async function validateComPassword(tabId, password) {
     return false;
 }
 
-async function getHeader(url) {
+function getHeader(url) {
     return matchingUrls.has(url) ? matchingUrls.get(url).header : "";
 }
 
@@ -157,13 +172,8 @@ browser.runtime.onMessage.addListener(
             case "openOptions":
                 browser.runtime.openOptionsPage();
                 return;
-            case "registerComPassword":
-                registerComPassword(message.payload);
-                return;
             case "validateComPassword":
                 return validateComPassword(sender.tab.id, message.payload);
-            case "getHeader":
-                return getHeader(message.payload);
             case "loadData":
                 return loadData(sender.tab.id);
             case "storeData":

@@ -1,7 +1,4 @@
 import browser from 'webextension-polyfill';
-import * as Base64js from 'base64-js';
-
-import { getClientUrl } from "./settings";
 
 let scriptCode = '(' + function() {
     fetch("%URL%", {redirect: "follow"})
@@ -24,26 +21,16 @@ let scriptCode = '(' + function() {
         });
 } + ')();';
 
-function randomPassword() {
-    let buf = new Uint8Array(16);
-    window.crypto.getRandomValues(buf);
-    return Base64js.fromByteArray(buf);
-}
-
 async function load() {
     if (document.contentType !== "text/plain") {
         return;
     }
 
-    const clientUrl = await getClientUrl();
-    if (clientUrl) {
-        const comPassword = randomPassword();
-        await browser.runtime.sendMessage({action: "registerComPassword", payload: comPassword});
-        const header = await browser.runtime.sendMessage({action: "getHeader", payload: window.location.href});
+    if (window.moera.clientUrl) {
         scriptCode = scriptCode
-            .replace(/%URL%/g, clientUrl)
-            .replace(/%PASSWD%/g, comPassword)
-            .replace(/%HEADER%/g, header);
+            .replace(/%URL%/g, window.moera.clientUrl)
+            .replace(/%PASSWD%/g, window.moera.comPassword)
+            .replace(/%HEADER%/g, window.moera.header);
         let script = document.createElement("script");
         script.textContent = scriptCode;
         (document.head || document.documentElement).appendChild(script);

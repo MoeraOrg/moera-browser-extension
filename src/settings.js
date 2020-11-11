@@ -1,4 +1,4 @@
-import browser from "webextension-polyfill";
+import browser from 'webextension-polyfill';
 
 export const DEFAULT_CLIENT_URL = "https://client.moera.org/releases/latest";
 
