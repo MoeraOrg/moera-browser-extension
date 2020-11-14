@@ -1,34 +1,58 @@
 import { getSettings, setSettings } from "./settings";
 
 function isDefaultClient() {
-    return document.querySelector("#default-client").checked;
+    return document.getElementById("default-client").checked;
 }
 
 function setDefaultClient(defaultClient) {
-    document.querySelector("#default-client").checked = defaultClient;
+    document.getElementById("default-client").checked = defaultClient;
 }
 
-function showCustomClientUrl(visible) {
-    document.querySelector("#custom-client-url-section").style.display = visible ? "block" : "none";
+function isInitialDefaultClient() {
+    return document.getElementById("default-client").dataset.initial === "true";
+}
+
+function setInitialDefaultClient(defaultClient) {
+    document.getElementById("default-client").dataset.initial = defaultClient;
 }
 
 function getCustomClientUrl() {
-    return document.querySelector("#custom-client-url").value;
+    return document.getElementById("custom-client-url").value;
 }
 
 function setCustomClientUrl(customClientUrl) {
-    document.querySelector("#custom-client-url").value = customClientUrl;
+    document.getElementById("custom-client-url").value = customClientUrl;
 }
 
-async function updateUI() {
-    const {defaultClient, customClientUrl} = await getSettings();
-    setDefaultClient(defaultClient);
-    showCustomClientUrl(!defaultClient);
-    setCustomClientUrl(customClientUrl);
+function getInitialCustomClientUrl() {
+    return document.getElementById("custom-client-url").dataset.initial;
 }
 
-function defaultClientChanged() {
+function setInitialCustomClientUrl(customClientUrl) {
+    document.getElementById("custom-client-url").dataset.initial = customClientUrl;
+}
+
+function showCustomClientUrl(visible) {
+    document.getElementById("custom-client-url-section").style.display = visible ? "block" : "none";
+}
+
+function enableSaveButton(enabled) {
+    document.getElementById("save").disabled = !enabled;
+}
+
+function update() {
     showCustomClientUrl(!isDefaultClient());
+    enableSaveButton(isDefaultClient() !== isInitialDefaultClient()
+        || getCustomClientUrl() !== getInitialCustomClientUrl());
+}
+
+async function initUI() {
+    const {defaultClient, customClientUrl} = await getSettings();
+    setInitialDefaultClient(defaultClient);
+    setDefaultClient(defaultClient);
+    setInitialCustomClientUrl(customClientUrl);
+    setCustomClientUrl(customClientUrl);
+    update();
 }
 
 async function saveSettings() {
@@ -36,8 +60,12 @@ async function saveSettings() {
         defaultClient: isDefaultClient(),
         customClientUrl: getCustomClientUrl()
     });
+    setInitialDefaultClient(isDefaultClient());
+    setInitialCustomClientUrl(getCustomClientUrl());
+    update();
 }
 
-document.addEventListener("DOMContentLoaded", updateUI);
-document.querySelector("#default-client").addEventListener("click", defaultClientChanged);
-document.querySelector("#save").addEventListener("click", saveSettings);
+document.addEventListener("DOMContentLoaded", initUI);
+document.getElementById("default-client").addEventListener("click", update);
+document.getElementById("custom-client-url").addEventListener("keyup", update);
+document.getElementById("save").addEventListener("click", saveSettings);
