@@ -153,7 +153,7 @@ export async function deleteData(tabId, location) {
         if (!location) {
             location = homeRoot;
         }
-        if (roots.find(r => r.url === homeRoot) == null && location !== homeRoot) {
+        if (roots.find(r => r.url === location) == null && location !== homeRoot) {
             return null;
         }
         roots = roots.filter(r => r.url !== location);
